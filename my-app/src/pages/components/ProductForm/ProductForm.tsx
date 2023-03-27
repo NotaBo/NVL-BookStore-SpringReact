@@ -1,4 +1,4 @@
-import { LoadingButton } from "@mui/lab";
+import { LoadingButton } from '@mui/lab';
 import {
   TableContainer,
   Table,
@@ -6,52 +6,50 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  TextField,
   Input,
   Typography,
   Paper,
   FormControl,
   InputLabel,
   MenuItem,
-  Select,
   Grid,
-} from "@mui/material";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { FormProvider } from "react-hook-form";
-import { store } from "../../../store";
-import { productCreateThunk } from "../../Product/productSlice";
-import {
-  categoryAdapter,
-  categoryFetchThunk,
-} from "../../Products/categorySlice";
-import { Product } from "../model/products";
-import "./ProductForm.scss";
+} from '@mui/material';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { FormProvider } from 'react-hook-form';
+import { store } from '../../../store';
+import { productCreateThunk } from '../../Product/productSlice';
+import { categoryAdapter, categoryFetchThunk } from '../../Products/categorySlice';
+import FormInput from '../form/FormInput';
+import { Select } from '../form/Select';
+import { Product } from '../model/products';
+import './ProductForm.scss';
 
 export default function ProductForm() {
   const [image, setImage] = useState();
 
   const methods = useForm();
-  const onSubmit = (data: any) => console.log(data);
 
   const onFileChangeHandler = (e: any) => {
     e.preventDefault();
     const formData = new FormData();
-    formData.append("file", e.target.files[0]);
-    fetch("http://localhost:8080/api/file/upload", {
-      method: "post",
+    formData.append('file', e.target.files[0]);
+    fetch('http://localhost:8080/api/file/upload', {
+      method: 'post',
       body: formData,
     }).then((res) => {
       if (res.ok) {
-        alert("File uploaded successfully");
+        alert('File uploaded successfully');
       }
     });
     console.log(formData);
   };
 
-  const categoryInput = categoryAdapter
-    .getSelectors()
-    .selectAll(store.getState().category);
+  const categoryInput = categoryAdapter.getSelectors().selectAll(store.getState().category);
+
+  const onSubmit = (data: any) => {
+    console.log(data);
+  };
 
   useEffect(() => {
     store.dispatch(categoryFetchThunk());
@@ -63,78 +61,38 @@ export default function ProductForm() {
         <form onSubmit={methods.handleSubmit(onSubmit)}>
           <Grid container spacing={2}>
             <Grid item xs={4}>
-              <TextField
-                id="filled-basic"
-                label="Name"
-                variant="filled"
-                fullWidth
-                defaultValue=""
-              />
+              <FormInput name="name" label="Name" variant="filled" fullWidth />
             </Grid>
             <Grid item xs={4}>
-              <TextField
-                id="filled-basic"
-                label="Description"
-                variant="filled"
-                fullWidth
-              />
+              <FormInput name="description" label="Description" variant="filled" fullWidth />
             </Grid>
             <Grid item xs={4}>
-              <TextField
-                id="filled-basic"
-                label="Price"
-                variant="filled"
-                fullWidth
-              />
+              <FormInput name="unitPrice" label="Price" variant="filled" fullWidth />
             </Grid>
             <Grid item xs={4}>
-              <TextField
-                id="filled-basic"
-                label="Instock"
-                variant="filled"
-                fullWidth
-              />
+              <FormInput name="unitsInStock" label="Instock" variant="filled" fullWidth />
             </Grid>
             <Grid item xs={4}>
               <div className="filterItem">
-                <FormControl fullWidth>
-                  <InputLabel id="demo-simple-select-label">
-                    Categories
-                  </InputLabel>
-                  <Select
-                    labelId="demo-simple-select-label"
-                    id="demo-simple-select"
-                    label="Age"
-                    defaultValue="">
-                    <MenuItem>--None--</MenuItem>
-                    {categoryInput.map((categories, index) => (
-                      <MenuItem value={categories.id} key={index}>
-                        {categories.categoryName}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Select name="category">
+                  <MenuItem value="0">-- None --</MenuItem>
+                  {categoryInput.map((categories: any, index: any) => (
+                    <MenuItem value={categories.id} key={index}>
+                      {categories.categoryName}
+                    </MenuItem>
+                  ))}
+                </Select>
               </div>
             </Grid>
 
             <Grid item xs={4}>
-              <TextField
-                id="filled-basic"
-                label="Author"
-                variant="filled"
-                fullWidth
-              />
+              <FormInput name="brand" label="Author" variant="filled" fullWidth />
             </Grid>
             <Grid item xs={4}>
-              <Input value={image} type="file" onChange={onFileChangeHandler} />
+              <Input value={image} name="imageUrl" type="file" onChange={onFileChangeHandler} />
             </Grid>
             <Grid item xs={4}>
-              <LoadingButton
-                type="submit"
-                color="primary"
-                size="large"
-                variant="contained"
-                sx={{ margin: "20px" }}>
+              <LoadingButton type="submit" color="primary" size="large" variant="contained" sx={{ margin: '20px' }}>
                 Add product
               </LoadingButton>
             </Grid>
