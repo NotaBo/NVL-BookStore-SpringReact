@@ -30,13 +30,25 @@ export const fetchProductByIdThunk = createAsyncThunk<Product, number>(
     }
 );
 
-export const categoryProductFetchThunk = createAsyncThunk<Category, number>(
+export const categoryProductFetchThunk = createAsyncThunk<Product[], number>(
     'category/fetchCategoryProducts',
     async (categoryId) => {
         try{
             const response = await axios.get(`categories/${categoryId}`,{})
             return response.data;
         }catch (error:any) {
+            console.log(error)
+        }
+    }
+)
+
+export const productCreateThunk = createAsyncThunk<Product>(
+    'catalog/productcreate',
+    async () => {
+        try{
+            const response = await axios.post(`add`)
+            return response.data;
+        }catch(error:any){
             console.log(error)
         }
     }
@@ -55,7 +67,7 @@ export const fetchProductSearch = createAsyncThunk<Product[]> (
 );
 
 
-export const productSlide = createSlice({
+export const productSlice = createSlice({
     name: 'product',
     initialState: productsAdapter.getInitialState({
         status: 'idle',
@@ -103,6 +115,16 @@ export const productSlide = createSlice({
             productsAdapter.setAll(state, action.payload)
         });
 
+        builder.addCase(productCreateThunk.pending,(state)=>{
+            state.status = "pendingProductCreate";
+        });
+        builder.addCase(productCreateThunk.rejected,(state)=>{
+            state.status = "idle";
+        })
+        builder.addCase(productCreateThunk.fulfilled,(state,action)=>{
+            state.status = "idle";
+            productsAdapter.addOne(state, action.payload)
+        })
 
     },
 });
@@ -115,15 +137,15 @@ export const productByCategorySlice = createSlice({
     }),
     reducers:{},
     extraReducers(builder) {
-        builder.addCase(categoryProductFetchThunk.pending, (state)=>{
-            state.status = 'pendingFetchCategoryProduct';
-        });
-        builder.addCase(categoryProductFetchThunk.rejected, (state)=>{
-            state.status = 'idle';
-        });
-        builder.addCase(categoryProductFetchThunk.fulfilled, (state,action)=>{
-            state.status = 'idle';
-            categoryProductAdapter.upsertOne(state,action.payload)
-        });
+        // builder.addCase(categoryProductFetchThunk.pending, (state)=>{
+        //     state.status = 'pendingFetchCategoryProduct';
+        // });
+        // builder.addCase(categoryProductFetchThunk.rejected, (state)=>{
+        //     state.status = 'idle';
+        // });
+        // builder.addCase(categoryProductFetchThunk.fulfilled, (state,action)=>{
+        //     state.status = 'idle';
+        //     categoryProductAdapter.setAll(state,action.payload)
+        // });
     },
 });

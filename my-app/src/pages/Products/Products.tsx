@@ -22,10 +22,7 @@ import {
 import { categoryAdapter, categoryFetchThunk } from "./categorySlice";
 import "./Products.scss";
 import SearchIcon from "@mui/icons-material/Search";
-import { Category, categoryItem } from "../components/model/category";
 import { Product } from "../components/model/products";
-import ProductForm from "../components/ProductForm/ProductForm";
-import { useSelector } from "react-redux";
 
 export default function Products() {
   const products = productsAdapter
@@ -160,7 +157,7 @@ export default function Products() {
             size="large"
             variant="contained"
             sx={{ margin: "20px" }}
-            onClick={() => setOpen(!open)}>
+            >
             Add product
           </LoadingButton>
         </div>
@@ -206,12 +203,25 @@ export default function Products() {
                     View
                   </Button>
                 </div>
+                <div className="button">
+                <Button
+                    size="small"
+                    component={Link}
+                    to={`/products/update/${product.id}`}>
+                    Update
+                  </Button>
+                  <Button
+                    size="small"
+                    component={Link}
+                    to={`/product/${product.id}`}>
+                    Delete
+                  </Button>
+                </div>
               </div>
             </Grid>
           ))}
         </Grid>
       </div>
-      {open && <ProductForm />}
     </div>
   );
 }

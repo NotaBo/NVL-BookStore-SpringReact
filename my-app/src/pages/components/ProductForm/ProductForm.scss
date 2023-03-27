@@ -1,12 +1,5 @@
 .ProductForm{
     display: flex;
-    position: absolute;
-    background-color: white;
-    top: 50%;
-    left: 50%;
-    padding: 20px;
-    -webkit-box-shadow: 0px 0px 7px -5px rgba(0,0,0,0.5);
-    box-shadow: 0px 0px 7px -5px rgba(0,0,0,0.5);
-    border: 1px solid black;
-    z-index: 2000;
+    justify-content: center;
+    border: 1px black;
 }

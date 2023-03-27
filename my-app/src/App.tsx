@@ -14,6 +14,8 @@ import { getCookie } from "./util/util";
 import { ToastContainer } from "react-toastify";
 import NotFound from "./pages/error/NotFound";
 import LoadingComponent from "./pages/components/Loading/LoadingComponent";
+import ProductForm from "./pages/components/ProductForm/ProductForm";
+import UpdateProduct from "./pages/components/updateProduct/UpdateProduct";
 
 function App() {
   const [loading, setLoading] = useState<Boolean>();
@@ -41,6 +43,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="products/:categoryId" element={<Products />} />
         <Route path="product/:productId" element={<ProductDetail />} />
+        <Route path="products/add" element={<ProductForm/>}/>
+        <Route path="products/update/:productId" element={<UpdateProduct/>}/>
         <Route path="not-found" element={<NotFound />} />
       </Routes>
       <Footer />

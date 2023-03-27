@@ -75,8 +75,8 @@ const Categories = () => {
                 alt=""
               />
               <button>
-                <Link to="/products/" className="link">
-                  Accessories
+                <Link to="/products/add" className="link">
+                  Add Products
                 </Link>
               </button>
             </div>
