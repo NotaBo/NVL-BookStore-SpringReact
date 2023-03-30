@@ -17,12 +17,14 @@ import {
   categoryProductFetchThunk,
   fetchProductSearch,
   fetchProductThunk,
+  productDeleteThunk,
   productsAdapter,
 } from "../Product/productSlice";
 import { categoryAdapter, categoryFetchThunk } from "./categorySlice";
 import "./Products.scss";
 import SearchIcon from "@mui/icons-material/Search";
 import { Product } from "../components/model/products";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 export default function Products() {
   const products = productsAdapter
@@ -33,7 +35,7 @@ export default function Products() {
     .selectAll(store.getState().category);
 
   const { categoryId } = useParams();
-  const [ProductbyCategory, setProductByCategory] = useState<Product[]>();
+  const [InitialProduct, setInitialProduct] = useState<Product[]>();
   const [filterCategory, setFilterCategory] = useState(0);
   const [maxPrice, setMaxPrice] = useState<any | null>(1000);
   const [sort, setSort] = useState<any | null>(null);
@@ -64,14 +66,10 @@ export default function Products() {
   // );
 
   useEffect(() => {
-    if (filterCategory === 0) {
-      store.dispatch(fetchProductThunk());
-    } else {
-      // console.log(test);
-      // setProductByCategory(test)
-    }
+    store.dispatch(fetchProductThunk());
+
     store.dispatch(categoryFetchThunk());
-  }, [filterCategory]);
+  }, [filterCategory, products]);
 
   return (
     <div className="Products">
@@ -153,11 +151,12 @@ export default function Products() {
         </div>
         <div className="addProduct">
           <LoadingButton
+            component={Link}
+            to={`/products/add`}
             color="primary"
             size="large"
             variant="contained"
-            sx={{ margin: "20px" }}
-            >
+            sx={{ margin: "20px" }}>
             Add product
           </LoadingButton>
         </div>
@@ -171,7 +170,7 @@ export default function Products() {
         />
         <Grid container spacing={2}>
           {products.map((product, index) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
+            <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
               <div className="card">
                 <div className="image">
                   <img
@@ -196,26 +195,27 @@ export default function Products() {
                     }>
                     Add to cart
                   </LoadingButton>
-                  <Button
+                  <LoadingButton
                     size="small"
                     component={Link}
                     to={`/product/${product.id}`}>
                     View
-                  </Button>
+                  </LoadingButton>
                 </div>
                 <div className="button">
-                <Button
+                  <LoadingButton
                     size="small"
                     component={Link}
                     to={`/products/update/${product.id}`}>
                     Update
-                  </Button>
-                  <Button
+                  </LoadingButton>
+                  <LoadingButton
                     size="small"
-                    component={Link}
-                    to={`/product/${product.id}`}>
-                    Delete
-                  </Button>
+                    onClick={() => {
+                      store.dispatch(productDeleteThunk(product.id));
+                    }}>
+                    <DeleteIcon color="error" />
+                  </LoadingButton>
                 </div>
               </div>
             </Grid>

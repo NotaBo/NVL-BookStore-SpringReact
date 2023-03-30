@@ -1,132 +1,177 @@
-import { useEffect, useState } from "react";
-import "./UpdateProduct.scss";
-import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
-import BalanceIcon from "@mui/icons-material/Balance";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import { useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
-
-import { TextField } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
+import { Input, MenuItem, Grid } from "@mui/material";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { FormProvider } from "react-hook-form";
+import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { store } from "../../../store";
-import { productsAdapter, fetchProductByIdThunk } from "../../Product/productSlice";
-import { addBasketItemThunk, removeBasketItemThunk } from "../Cart/BasketSlice";
-import LoadingComponent from "../Loading/LoadingComponent";
-import { BasketItem } from "../model/basket";
+import {
+  fetchProductByIdThunk,
+  productsAdapter,
+  productUpdateThunk,
+} from "../../Product/productSlice";
+import {
+  categoryAdapter,
+  categoryFetchThunk,
+} from "../../Products/categorySlice";
+import FormInput from "../form/FormInput";
+import { Select } from "../form/Select";
+import { Product } from "../model/products";
+import "./UpdateProduct.scss";
 
+export default function ProductForm() {
+  const [image, setImage] = useState();
 
-const images = [
-  "https://images.pexels.com/photos/10026491/pexels-photo-10026491.png?auto=compress&cs=tinysrgb&w=1600&lazy=load",
-  "https://images.pexels.com/photos/12179283/pexels-photo-12179283.jpeg?auto=compress&cs=tinysrgb&w=1600&lazy=load",
-];
+  const { productId } = useParams();
 
-export default function ProductDetail() {
-  let params = useParams();
-  const [selectedImg, setSelectedImg] = useState(0);
-  const [quantity, setQuantity] = useState(0);
-  const { basket, status } = useSelector((state: any) => state.basket);
-  const [submitting, setSubmitting] = useState(false);
-    const product = productsAdapter.getSelectors().selectById(store.getState().product, +params.productId!);
-    const productStatus = useSelector((state:any)=>state.product.status)
+  let product: any = null;
+  if (productId) {
+    product = productsAdapter
+      .getSelectors()
+      .selectById(store.getState().product, +productId!);
+  }
 
-
-  const basketItem = basket?.basketItems.find(
-    (i: BasketItem) => i.productId === product?.id
-  );
-
-  const handleInputChange = (event: any) => {
-    if (event.target.value >= 0) {
-      setQuantity(event.target.value);
-    }
+  const defaultValues: Omit<Product, "id"> = {
+    name: "Name",
+    description: "Description",
+    unitPrice: 0,
+    imageUrl: "",
+    brand: "String",
+    unitsInStock: 0,
+    category: "0",
   };
 
-  const handleUpdateCart = () => {
-    setSubmitting(true);
-    if (!basketItem || quantity > basketItem?.quantity) {
-      const updatedQuantity = basketItem
-        ? quantity - basketItem.quantity
-        : quantity;
-      store.dispatch(
-        addBasketItemThunk({
-          productId: product!.id,
-          quantity: updatedQuantity,
-        })
-      );
-    } else {
-      const updatedQuantity = basketItem.quantity - quantity;
-      store.dispatch(
-        removeBasketItemThunk({
-          productId: product!.id,
-          quantity: updatedQuantity,
-        })
-      );
+  const methods = useForm<any>({
+    defaultValues,
+  });
+
+  const onFileChangeHandler = (e: any) => {
+    e.preventDefault();
+
+    console.log(e.target.files[0]);
+
+    methods.setValue("imageUrl", e.target.files[0].name);
+    const formData = new FormData();
+    formData.append("file", e.target.files[0]);
+    fetch("http://localhost:8080/api/file/upload", {
+      method: "post",
+      body: formData,
+    }).then((res) => {
+      if (res.ok) {
+        alert("File uploaded successfully");
+      }
+    });
+  };
+
+  const categoryInput = categoryAdapter
+    .getSelectors()
+    .selectAll(store.getState().category);
+
+  const onSubmit = (data: any) => {
+    if (data) {
+      store.dispatch(productUpdateThunk(data));
     }
+    console.log(data);
   };
 
   useEffect(() => {
-    if (!product) {
-        store.dispatch(fetchProductByIdThunk(+params.productId!));
+    if (productId) {
+      store.dispatch(fetchProductByIdThunk(+productId!));
+      if (product) {
+        const fields = [
+          "id",
+          "name",
+          "description",
+          "unitPrice",
+          "imageUrl",
+          "brand",
+          "unitsInStock",
+        ];
+        fields.forEach((field) => methods.setValue<any>(field, product[field]));
+        methods.setValue("category", product.categoryId);
+      }
     }
-    if (basketItem) {
-      setQuantity(basketItem.quantity);
-    }
-  }, [basketItem, params.productId, product]);
+  }, [methods, product, productId]);
 
-  
-  if (productStatus.includes('pending')) 
-     return <LoadingComponent/>
-  
-
-  if (!product)
-    return <h3>Product not Found</h3>   
+  useEffect(() => {
+    store.dispatch(categoryFetchThunk());
+  });
 
   return (
-    <div className="Product">
-      <div className="left">
-        <div className="images">
-          <img src={images[0]} alt="" onClick={(e) => setSelectedImg(0)} />
-          <img src={images[1]} alt="" onClick={(e) => setSelectedImg(1)} />
-        </div>
-        <div className="mainImg">
-          <img
-            src={`http://localhost:8080/api/file/image/${product?.imageUrl}`}
-            alt=""
-          />
-        </div>
-      </div>
+    <div className="ProductForm">
+      <FormProvider {...methods}>
+        <form onSubmit={methods.handleSubmit(onSubmit)}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <FormInput name="name" label="Name" variant="filled" fullWidth />
+            </Grid>
+            <Grid item xs={12}>
+              <FormInput
+                name="description"
+                label="Description"
+                variant="filled"
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormInput
+                name="unitPrice"
+                label="Price"
+                variant="filled"
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormInput
+                name="unitsInStock"
+                label="Instock"
+                variant="filled"
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <div className="filterItem">
+                <Select name="category" fullWidth>
+                  <MenuItem value="0">-- None --</MenuItem>
+                  {categoryInput.map((categories: any, index: any) => (
+                    <MenuItem value={categories.id} key={index}>
+                      {categories.categoryName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </div>
+            </Grid>
 
-      <div className="right">
-        <h1>{product?.name}</h1>
-
-        <h2>{product?.brand}</h2>
-        
-        <span className="price">${product?.unitPrice}</span>
-
-        <div className="description">
-          <h2>Description</h2>
-          <p>{product?.description}</p>
-        </div>
-        
-        <div className="link">
-          <div className="item">
-            <h2>Units in stock</h2>
-            <p>{product?.unitsInStock}</p>
-          </div>
-        </div>
-        <div className="info">
-          <span>Vendor: Polo</span>
-          <span>Product type: T-shirt</span>
-          <span>Tag: T-shirt, men, Top</span>
-        </div>
-        <hr />
-        <div className="details">
-          <span>DESCRIPTION</span>
-          <hr />
-          <span>ADDITIONAL INFORMATION</span>
-          <hr />
-          <span>FAQ</span>
-        </div>
-      </div>
+            <Grid item xs={12}>
+              <FormInput
+                name="brand"
+                label="Author"
+                variant="filled"
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Input
+                value={image}
+                name="imageUrl"
+                type="file"
+                onChange={onFileChangeHandler}
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <LoadingButton
+                type="submit"
+                color="primary"
+                size="large"
+                variant="contained"
+                sx={{ margin: "20px" }}>
+                Update Product
+              </LoadingButton>
+            </Grid>
+          </Grid>
+        </form>
+      </FormProvider>
     </div>
   );
 }

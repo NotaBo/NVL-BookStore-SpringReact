@@ -1,7 +1,9 @@
-import { createAsyncThunk, createEntityAdapter, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createEntityAdapter, createSlice, EntityId } from "@reduxjs/toolkit";
 import axios from "axios";
+import { toast } from "react-toastify";
 import { Category } from "../components/model/category";
 import { Product } from "../components/model/products";
+import 'react-toastify/dist/ReactToastify.css';
 
 export const productsAdapter = createEntityAdapter<Product>();
 export const categoryProductAdapter = createEntityAdapter<Category>();
@@ -42,17 +44,56 @@ export const categoryProductFetchThunk = createAsyncThunk<Product[], number>(
     }
 )
 
-export const productCreateThunk = createAsyncThunk<Product>(
+export const productCreateThunk = createAsyncThunk<Product, Product>(
     'catalog/productcreate',
-    async () => {
+    async (body) => {
         try{
-            const response = await axios.post(`add`)
+            const response = await axios.post(`products/add`,body)
+            
             return response.data;
         }catch(error:any){
             console.log(error)
         }
     }
 )
+
+export const productUpdateThunk = createAsyncThunk<Product, Product>(
+    'catalog/productupdate',
+    async (body) => {
+        try{
+            const formData = new FormData();
+            formData.append("id",String(body.id))
+            formData.append("name",body.name)
+            formData.append("description",body.description)
+            formData.append("unitPrice",String(body.unitPrice))
+            formData.append("imageUrl",body.imageUrl)
+            formData.append("brand",body.brand)
+            formData.append("unitsInStock",String(body.unitsInStock))
+            formData.append("category",String(body.category))
+            console.log(formData);
+            const response = await axios.put(`products/update/${body.id}`, formData)
+            toast.success("Product updated", {theme:"colored", position:'top-center'})
+            return response.data;
+        } catch(error:any) {
+            console.log(error)
+        }
+    }
+)
+
+export const productDeleteThunk = createAsyncThunk<number, number>(
+    'catalog/productdelete',
+    async (productId) => {
+        try{
+            const response = await axios.delete(`products/delete/${productId}`)
+            window.location.reload();
+            toast.success("Product deleted", {theme:"dark", position:'top-center'})
+            return response.data
+        } catch(error:any) {
+            console.log(error)
+        }
+    }
+)
+
 
 export const fetchProductSearch = createAsyncThunk<Product[]> (
     'catalog/fetchProductSearch',
@@ -102,6 +143,7 @@ export const productSlice = createSlice({
         builder.addCase(fetchProductByIdThunk.fulfilled, (state,action) => {
             state.status = 'idle'
             productsAdapter.upsertOne(state, action.payload)
+            state.productLoaded =true;
         });
 
         builder.addCase(fetchProductSearch.pending, (state) => {
@@ -124,7 +166,31 @@ export const productSlice = createSlice({
         builder.addCase(productCreateThunk.fulfilled,(state,action)=>{
             state.status = "idle";
             productsAdapter.addOne(state, action.payload)
-        })
+        });
+
+        builder.addCase(productDeleteThunk.pending,(state)=>{
+            state.status = "pendingDeleteProduct"
+        });
+        builder.addCase(productDeleteThunk.rejected,(state)=>{
+            state.status = "idle"
+        });
+        builder.addCase(productDeleteThunk.fulfilled,(state,action)=>{
+            state.status = "idle";
+            
+            productsAdapter.removeOne(state, action.payload)
+        });
+
+        builder.addCase(productUpdateThunk.pending,(state)=>{
+            state.status = "pendingUpdateProduct"
+        });
+        builder.addCase(productUpdateThunk.rejected,(state)=>{
+            state.status = "idle"
+        });
+        builder.addCase(productUpdateThunk.fulfilled,(state,action)=>{
+            state.status = "idle";
+            productsAdapter.updateOne(state,{id: action.meta.arg.id, 
+                                    changes: {...action.payload, additionalDetails: true}})
+        });
 
     },
 });
